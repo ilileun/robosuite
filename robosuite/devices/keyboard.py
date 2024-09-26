@@ -3,11 +3,12 @@ Driver class for Keyboard controller.
 """
 
 import numpy as np
-from pynput.keyboard import Controller, Key, Listener
+from pynput.keyboard import Controller, Key, Listener, KeyCode
 
 from robosuite.devices import Device
 from robosuite.utils.transform_utils import rotation_matrix
 
+import sys
 
 class Keyboard(Device):
     """
@@ -31,7 +32,10 @@ class Keyboard(Device):
 
         self.pos_sensitivity = pos_sensitivity
         self.rot_sensitivity = rot_sensitivity
-
+        
+        # 이미지 저장 요청을 위한 새로운 상태 변수
+        self.key_5_pressed = False
+        
         # make a thread to listen to keyboard and register our callback functions
         self.listener = Listener(on_press=self.on_press, on_release=self.on_release)
 
@@ -60,6 +64,7 @@ class Keyboard(Device):
         print_command("e-r", "rotate (roll)")
         print_command("s", "switch active arm if multi-armed robot")
         print_command("=", "switch active robot if multi-robot environment")
+        print_command("5", "save RGB and depth images")
         print("")
 
     def _reset_internal_state(self):
@@ -73,6 +78,9 @@ class Keyboard(Device):
         self.last_drotation = np.zeros(3)
         self.pos = np.zeros(3)  # (x, y, z)
         self.last_pos = np.zeros(3)
+        
+        # image 저장 요청을 위한 새로운 상태 변수
+        self.save_image_requested = False
 
     def start_control(self):
         """
@@ -113,7 +121,15 @@ class Keyboard(Device):
         """
 
         try:
+            
+            # capture image
+            if isinstance(key, KeyCode) and key.char == '5':
+                self.key_5_pressed = True
+                # print('5!!!!!!!!!!!!!!!!!!, pressed')
+                sys.stdout.flush()
             # controls for moving position
+            
+
             if key == Key.up:
                 self.pos[0] -= self._pos_step * self.pos_sensitivity  # dec x
             elif key == Key.down:
@@ -152,6 +168,7 @@ class Keyboard(Device):
                 drot = rotation_matrix(angle=-0.1 * self.rot_sensitivity, direction=[0.0, 0.0, 1.0])[:3, :3]
                 self.rotation = self.rotation.dot(drot)  # rotates z
                 self.raw_drotation[2] -= 0.1 * self.rot_sensitivity
+                
 
         except AttributeError as e:
             pass
@@ -164,7 +181,14 @@ class Keyboard(Device):
         """
 
         try:
-            # controls for grasping
+    
+            # capture image
+            if isinstance(key, KeyCode) and key.char == '5':
+                self.key_5_pressed = False
+                # print('5!!!!!!!!!!!!!!!!!!, released')
+                sys.stdout.flush()
+
+
             if key == Key.space:
                 self.grasp_states[self.active_robot][self.active_arm_index] = not self.grasp_states[self.active_robot][
                     self.active_arm_index
@@ -188,3 +212,12 @@ class Keyboard(Device):
 
         except AttributeError as e:
             pass
+
+    def get_key_pressed(self, key):
+        if key == '5':
+            is_pressed = self.key_5_pressed
+            # print(f"get_key_pressed('5') called, returning: {is_pressed}")
+            sys.stdout.flush()
+            return is_pressed
+        # ... (다른 키에 대한 처리)
+        return False

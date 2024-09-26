@@ -149,8 +149,11 @@ class ManipulationEnv(RobotEnv):
         ignore_done=False,
         hard_reset=True,
         camera_names="agentview",
-        camera_heights=256,
-        camera_widths=256,
+        # camera_heights=256,
+        # camera_widths=256,
+        camera_heights=480,
+        camera_widths=640,
+        
         camera_depths=False,
         camera_segmentations=None,
         renderer="mujoco",
