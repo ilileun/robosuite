@@ -621,11 +621,24 @@ class MujocoXMLObject(MujocoObject, MujocoXML):
         )
         return string_to_array(horizontal_radius_site.get("pos"))[0]
 
+    # def get_bounding_box_half_size(self):
+    #     horizontal_radius_site = self.worldbody.find(
+    #         "./body/site[@name='{}horizontal_radius_site']".format(self.naming_prefix)
+    #     )
+    #     return string_to_array(horizontal_radius_site.get("pos")) - self.bottom_offset
+
+
     def get_bounding_box_half_size(self):
         horizontal_radius_site = self.worldbody.find(
             "./body/site[@name='{}horizontal_radius_site']".format(self.naming_prefix)
         )
-        return string_to_array(horizontal_radius_site.get("pos")) - self.bottom_offset
+        if horizontal_radius_site is not None:
+            site_values = string_to_array(horizontal_radius_site.get("pos"))
+            return np.array([np.linalg.norm(site_values[0:2]), np.linalg.norm(site_values[0:2]), site_values[2]]) - self.bottom_offset
+        else:
+            # Use the width, depth, and height properties directly
+            return np.array([self.width / 2, self.depth / 2, self.height / 2])
+        
 
     def _get_elements_by_name(self, geom_names, body_names=None, joint_names=None):
         """

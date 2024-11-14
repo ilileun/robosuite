@@ -476,7 +476,8 @@ def quat2mat(quaternion):
     n = np.dot(q, q)
     if n < EPS:
         return np.identity(3)
-    q *= math.sqrt(2.0 / n)
+    # q *= math.sqrt(2.0 / n)
+    q *= np.sqrt(2.0 / n)
     q2 = np.outer(q, q)
     return np.array(
         [
